@@ -1,0 +1,8 @@
+__pycache__
+.devcontainer
+venv/
+.vscode/
+.*
+*.key
+*.crt
+*.pem
