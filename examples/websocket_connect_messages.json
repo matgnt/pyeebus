@@ -1,0 +1,7 @@
+{"command":"InitializeFrontend","option":"","parameter":""}
+{"command":"ClearTrustedDeviceList","option":"","parameter":""}
+{"command":"StatusOptolinkDevice","option":"","parameter":"Connected"}
+{"command":"StatusEebusDevice","option":"","parameter":"Disconnected"}
+{"command":"StatusDeviceDiscoveryIdle","option":"","parameter":"true"}
+{"command":"StatusAddDeviceIdle","option":"","parameter":"false"}
+{"command":"StatusRemoveDeviceIdle","option":"","parameter":"false"}

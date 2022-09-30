@@ -1,0 +1,32 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 313840540603005427750893121772907331738742367978 (0x36f918b85838a0bf20f39483f5c59ea8cd5d26ea)
+    Signature Algorithm: ECDSA-SHA256
+        Issuer: CN=localhost
+        Validity
+            Not Before: Sep 29 21:26:52 2022 UTC
+            Not After : Sep 29 21:26:52 2023 UTC
+        Subject: CN=localhost
+        Subject Public Key Info:
+            Public Key Algorithm: ECDSA
+                Public-Key: (256 bit)
+                X:
+                    a2:7b:ee:46:e3:96:d5:24:b4:84:b8:fa:12:b0:6c:
+                    9b:9a:0b:40:76:5c:04:7a:32:e6:18:e7:7b:ec:b6:
+                    5b:65
+                Y:
+                    2b:d0:84:54:11:4b:8e:a3:92:31:be:97:65:4a:10:
+                    d4:3f:b2:8d:3c:c8:e2:e6:10:a3:2b:ef:fb:18:3d:
+                    ca:cf
+                Curve: P-256
+        X509v3 extensions:
+            X509v3 Subject Alternative Name:
+                DNS:localhost
+            X509v3 Subject Key Identifier:
+                BD:25:46:17:45:02:83:D9:AE:A7:C2:15:48:BF:25:C2:41:F2:F7:F4
+    Signature Algorithm: ECDSA-SHA256
+         30:44:02:20:07:65:ca:b5:a5:bd:da:11:b0:ca:77:a1:c5:2a:
+         a2:1a:2c:8f:27:d8:39:1a:69:4b:71:c7:6b:52:0a:ba:2a:dc:
+         02:20:12:7a:f1:ba:e4:a2:94:58:2d:1b:de:7c:61:a3:c2:12:
+         06:6f:19:ec:fa:ad:fb:8e:0d:d0:f2:c9:c9:7f:35:b9
