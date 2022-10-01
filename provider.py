@@ -54,9 +54,17 @@ async def handler(websocket):
     async for msg in websocket:
         print(msg)
 
+async def connection_request(path, request_headers):
+    """
+    Ref: https://websockets.readthedocs.io/en/stable/reference/server.html#websockets.server.WebSocketServerProtocol.process_request
+    """
+    # try checking mTLS params here
+
+    return None # None to continue with regular handshake
+
 async def start_websocket():
     #async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT, ssl=ssl_context):
-    async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT):
+    async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT, process_request=connection_request):
         await asyncio.Future()
 
 async def main():
