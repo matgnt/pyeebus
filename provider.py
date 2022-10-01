@@ -8,8 +8,14 @@ from datetime import datetime
 import json
 import pathlib
 import ssl
+import logging
 
 from pyeebus import x509_utils
+
+logging.basicConfig(
+    format="%(message)s",
+    level=logging.DEBUG,
+)
 
 PROVIDER_PRIVATE_KEY_FN = os.getenv('PROVIDER_PRIVATE_KEY_FN', 'provider.key')
 PROVIDER_PUBLIC_KEY_FN = os.getenv('PROVIDER_PUBLIC_KEY_FN', 'provider.pem')
@@ -33,8 +39,10 @@ assert os.path.isfile(PROVIDER_CERT_FN)
 connections = {}
 
 ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.verify_mode = ssl.CERT_NONE # just about any cert is accepted
-ssl_context.load_verify_locations(PROVIDER_CERT_FN) # TODO: do we need this?
+ssl_context.verify_mode = ssl.CERT_NONE
+ssl_context.check_hostname = False
+ssl_context.load_cert_chain(certfile=PROVIDER_CERT_FN, keyfile=PROVIDER_PRIVATE_KEY_FN)
+#ssl_context.load_verify_locations(PROVIDER_CERT_FN) # TODO: do we need this?
 
 async def send_data():
     while True:
@@ -44,7 +52,7 @@ async def send_data():
                 'timestamp': datetime.now().isoformat(), 
             }
             await ws.send(json.dumps(data))
-        await asyncio.sleep(1.0)
+        await asyncio.sleep(5.0)
 
 async def handler(websocket):
     # new connection
@@ -63,8 +71,8 @@ async def connection_request(path, request_headers):
     return None # None to continue with regular handshake
 
 async def start_websocket():
-    #async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT, ssl=ssl_context):
-    async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT, process_request=connection_request):
+    async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT, ssl=ssl_context, process_request=connection_request):
+    #async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT, process_request=connection_request):
         await asyncio.Future()
 
 async def main():
