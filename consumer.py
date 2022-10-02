@@ -37,11 +37,12 @@ assert os.path.isfile(CONSUMER_CERT_FN)
 
 
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE # just about any cert is accepted
+#ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+ssl_context = ssl._create_unverified_context(purpose=ssl.Purpose.SERVER_AUTH, certfile=CONSUMER_CERT_FN, keyfile=CONSUMER_PRIVATE_KEY_FN, cafile=CONSUMER_CERT_FN)
+#ssl_context.check_hostname = False
+#ssl_context.verify_mode = ssl.CERT_NONE # just about any cert is accepted
 #ssl_context.load_verify_locations(CONSUMER_CERT_FN) # TODO: do we need this?
-ssl_context.load_cert_chain(certfile=CONSUMER_CERT_FN, keyfile=CONSUMER_PRIVATE_KEY_FN)
+#ssl_context.load_cert_chain(certfile=CONSUMER_CERT_FN, keyfile=CONSUMER_PRIVATE_KEY_FN)
 
 async def hello():
     uri = WEBSOCKET_URL

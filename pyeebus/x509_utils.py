@@ -4,7 +4,7 @@ from cryptography.hazmat.primitives import serialization, hashes, _serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
 from  cryptography import x509
-from cryptography.x509.oid import NameOID
+from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
 
 
 def generate_key(private_key_fn: str, public_key_fn: str = ""):
@@ -52,6 +52,8 @@ def generate_x509(public_key_pem: bytes, private_key_pem: bytes, cert_fn: str = 
     Taken from the library's tutorial
     https://cryptography.io/en/latest/x509/tutorial/#creating-a-self-signed-certificate
 
+    We add SERVER_AUTH and CLIENT_AUTH by default
+
     cert_fn: write to this file if given
     Returns certificate bytes
     """
@@ -81,6 +83,12 @@ def generate_x509(public_key_pem: bytes, private_key_pem: bytes, cert_fn: str = 
         # mandatory for SHIP protocol
         # the method already makes the SHA1 of the public key
         x509.SubjectKeyIdentifier.from_public_key(public_key=public_key),
+        critical=False
+    ).add_extension(
+        x509.ExtendedKeyUsage(usages=[
+            ExtendedKeyUsageOID.SERVER_AUTH,
+            ExtendedKeyUsageOID.CLIENT_AUTH,
+        ]),
         critical=False
     ).sign(
         private_key,

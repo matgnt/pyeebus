@@ -8,6 +8,12 @@ from websockets.datastructures import Headers
 from websockets.typing import Subprotocol
 from datetime import datetime
 import json
+import logging
+
+logging.basicConfig(
+    format="%(message)s",
+    level=logging.DEBUG,
+)
 
 
 PASSWORD = os.getenv('PASSWORD', '')
@@ -24,7 +30,8 @@ async def eebus(uri):
     #async with connect(uri) as websocket:
         now_unix = int(datetime.now().timestamp())
         data = {"command":"KeepAliveRequest","parameter":now_unix,"option":None}
-        await websocket.send(json.dumps(data))
+        data_b = json.dumps(data).encode()
+        await websocket.send(data_b)
         while True:
             try:
                 msg = await websocket.recv()

@@ -38,11 +38,18 @@ assert os.path.isfile(PROVIDER_CERT_FN)
 
 connections = {}
 
-ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-ssl_context.verify_mode = ssl.CERT_NONE
-ssl_context.check_hostname = False
-ssl_context.load_cert_chain(certfile=PROVIDER_CERT_FN, keyfile=PROVIDER_PRIVATE_KEY_FN)
+#ssl_context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+#ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+#ssl_context.verify_mode = ssl.CERT_REQUIRED
+#ssl_context.check_hostname = False
+#ssl_context.load_cert_chain(certfile=PROVIDER_CERT_FN, keyfile=PROVIDER_PRIVATE_KEY_FN)
 #ssl_context.load_verify_locations(PROVIDER_CERT_FN) # TODO: do we need this?
+
+#ssl_context = ssl._create_unverified_context(purpose=ssl.Purpose.CLIENT_AUTH, certfile=PROVIDER_CERT_FN, keyfile=PROVIDER_PRIVATE_KEY_FN, cafile=PROVIDER_CERT_FN)
+ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+ssl_context.load_cert_chain
+ssl_context.post_handshake_auth = True
+
 
 async def send_data():
     while True:
@@ -59,6 +66,8 @@ async def handler(websocket):
     global connections
     connections[str(websocket.id)] = websocket
     websocket.send('added to list')
+    peercert = websocket.transport.get_extra_info('peercert')
+    print(peercert)
     async for msg in websocket:
         print(msg)
 
