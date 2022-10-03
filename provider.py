@@ -10,6 +10,8 @@ import pathlib
 import socket
 from OpenSSL import SSL
 import logging
+from cryptography import x509
+from cryptography.hazmat.primitives._serialization import Encoding
 
 from pyeebus import x509_utils
 
@@ -39,8 +41,17 @@ assert os.path.isfile(PROVIDER_CERT_FN)
 
 connections = {}
 
+"""
+callback – The optional Python verification callback to use. This should take five arguments: A Connection object, an X509 object, and three integer variables, which are in turn potential error number, error depth and return code. callback should return True if verification passes and False otherwise. If omitted, OpenSSL’s default verification is used.
+"""
 def verify_cb(conn, cert, err, depth, ok):
     print(cert)
+    x509_cert: x509.Certificate = cert.to_cryptography()
+    xx = x509_cert.public_bytes(encoding=Encoding.PEM)
+    print(xx)
+    ski = x509_cert.extensions.get_extension_for_oid(x509.oid.ExtensionOID.SUBJECT_KEY_IDENTIFIER)
+    # don't trust this for self-signed certs without recalculating it from pub key!!!
+    print(f"ski:{ski.value.digest}")
 
     return 1 # TODO: security: 1 means cert check ok!
 
@@ -57,12 +68,13 @@ sock.bind(('', WEBSOCKET_PORT))
 sock.listen(5)
 
 while True:
+    # for every new connection, we get a new socket that we have to 'bind' to our ssl context
     incoming_sock, fromaddr = sock.accept()
     incoming_ssl_conn = SSL.Connection(ssl_context, incoming_sock)
     incoming_ssl_conn.set_accept_state()
     incoming_ssl_conn.do_handshake()
-    print(f"List of ciphers: {incoming_ssl_conn.get_cipher_list()}")
     req = incoming_ssl_conn.read(4096)
     print(req)
     incoming_ssl_conn.write(b"HTTP/1.1 200 OK\r\nServer: my-special\r\nContent-length: 10\r\n\r\nHello!\r\n\r\n")
+    #incoming_ssl_conn.write(b"HTTP/1.1 200 OK\r\nContent-Length:20\r\nHelloWorld\r\n")
     incoming_ssl_conn.set_shutdown(SSL.SENT_SHUTDOWN)

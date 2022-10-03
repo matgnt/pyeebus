@@ -7,7 +7,8 @@ import websockets
 from datetime import datetime
 import json
 import pathlib
-import ssl
+import socket
+from OpenSSL import SSL
 import logging
 
 from pyeebus import x509_utils
@@ -36,22 +37,24 @@ assert os.path.isfile(CONSUMER_PUBLIC_KEY_FN)
 assert os.path.isfile(CONSUMER_CERT_FN)
 
 
+def verify_cb(conn, cert, err, depth, ok):
+    print(cert)
 
-#ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-ssl_context = ssl._create_unverified_context(purpose=ssl.Purpose.SERVER_AUTH, certfile=CONSUMER_CERT_FN, keyfile=CONSUMER_PRIVATE_KEY_FN, cafile=CONSUMER_CERT_FN)
-#ssl_context.check_hostname = False
-#ssl_context.verify_mode = ssl.CERT_NONE # just about any cert is accepted
-#ssl_context.load_verify_locations(CONSUMER_CERT_FN) # TODO: do we need this?
-#ssl_context.load_cert_chain(certfile=CONSUMER_CERT_FN, keyfile=CONSUMER_PRIVATE_KEY_FN)
+    return 1 # TODO: security: 1 means cert check ok!
 
-async def hello():
-    uri = WEBSOCKET_URL
-    async with websockets.connect(uri, ssl=ssl_context) as websocket:
-    #async with websockets.connect(uri) as websocket:
-        await websocket.send('hello')
-        while True:
-            msg = await websocket.recv()
-            print(msg)
+ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+ssl_context.set_verify(SSL.VERIFY_PEER, callback=verify_cb)
+ssl_context.use_certificate_file(certfile=CONSUMER_CERT_FN)
+ssl_context.use_privatekey_file(keyfile=CONSUMER_PRIVATE_KEY_FN)
 
-if __name__ == "__main__":
-    asyncio.run(hello())
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+conn = SSL.Connection(ssl_context, sock)
+conn.connect(('localhost', 8765))
+conn.do_handshake()
+conn.send("""GET / HTTP/1.0""")
+
+while True:
+    msg = conn.recv(4096)
+    print(msg)
+
