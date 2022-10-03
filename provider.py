@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import asyncio
+from curses import raw
 from genericpath import isfile
 import os, sys
+from uvicorn.protocols.websockets.wsproto_impl import WSProtocol
 import wsproto
 from datetime import datetime
 import json
@@ -12,6 +14,8 @@ from OpenSSL import SSL
 import logging
 from cryptography import x509
 from cryptography.hazmat.primitives._serialization import Encoding
+import aioopenssl
+from uvicorn.protocols import websockets
 
 from pyeebus import x509_utils
 
@@ -67,6 +71,7 @@ conn = SSL.Connection(ssl_context, sock)
 sock.bind(('', WEBSOCKET_PORT))
 sock.listen(5)
 
+"""
 while True:
     # for every new connection, we get a new socket that we have to 'bind' to our ssl context
     incoming_sock, fromaddr = sock.accept()
@@ -78,3 +83,14 @@ while True:
     incoming_ssl_conn.write(b"HTTP/1.1 200 OK\r\nServer: my-special\r\nContent-length: 10\r\n\r\nHello!\r\n\r\n")
     #incoming_ssl_conn.write(b"HTTP/1.1 200 OK\r\nContent-Length:20\r\nHelloWorld\r\n")
     incoming_ssl_conn.set_shutdown(SSL.SENT_SHUTDOWN)
+"""
+
+def ssl_context_factory(xx):
+    return ssl_context
+
+while True:
+    incoming_sock, framaddr = sock.accept()
+    myasyncssl = aioopenssl.STARTTLSTransport(loop=asyncio.get_event_loop(), rawsock=incoming_sock, protocol=asyncio.Protocol(), ssl_context_factory=ssl_context_factory)
+
+    ws = WSProtocol()
+    ws.connection_made(transport=myasyncssl)
