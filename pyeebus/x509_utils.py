@@ -3,8 +3,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization, hashes, _serialization
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 
-from  cryptography import x509
+from cryptography import x509
 from cryptography.x509.oid import NameOID, ExtendedKeyUsageOID
+from cryptography.hazmat.primitives._serialization import Encoding
+from OpenSSL import crypto
 
 
 def generate_key(private_key_fn: str, public_key_fn: str = ""):
@@ -110,3 +112,16 @@ def get_ski_from_pem_crt_file(cert_fn: str):
     ski_ext = cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier)
     #x = x509.AuthorityKeyIdentifier.from_issuer_subject_key_identifier(ski_ext.value)
     return ski_ext.value.key_identifier
+
+def openssl_cert_to_ski(cert: crypto.X509):
+    x509_cert: x509.Certificate = cert.to_cryptography()
+    xx = x509_cert.public_bytes(encoding=Encoding.PEM)
+    #print(xx)
+    ski = x509_cert.extensions.get_extension_for_oid(x509.oid.ExtensionOID.SUBJECT_KEY_IDENTIFIER)
+    return ski.value.digest
+
+def ski_bytes_to_human_readable(ski: bytes):
+    return ski.hex(':').upper()
+
+def ski_bytes_to_human_readable_no_sep(ski: bytes):
+    return ski.hex()

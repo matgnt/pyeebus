@@ -8,7 +8,8 @@ import threading
 import time
 import queue
 import sys
-#from websockets import WebSocketCommonProtocol, WebSocketServerProtocol, WebsocketServer
+from pyeebus.x509_utils import openssl_cert_to_ski, ski_bytes_to_human_readable
+from pyeebus.ssl_utils import handshake
 from wsproto import WSConnection, ConnectionType
 from wsproto.events import Request, AcceptConnection
 
@@ -18,49 +19,6 @@ PORT = 7070
 
 client_msg_queue = queue.Queue()
 
-def get_reader_protocol():
-    stream_reader = asyncio.StreamReader(loop=asyncio.get_event_loop())
-    reader_protocol = asyncio.StreamReaderProtocol(stream_reader=stream_reader)
-    return reader_protocol, stream_reader
-
-def get_writer_protocol():
-    stream_writer = asyncio.StreamWriter()
-    writer_protocol = asyncio.SteamWriterProtocol()
-    return writer_protocol
-
-def handshake(connection: SSL.Connection, timeout_sec: int = 10):
-    """
-    Runs until handshake is ok or timout.
-
-    addapted example from pyopenssl tests:
-    https://github.com/pyca/pyopenssl/blob/main/tests/test_ssl.py#L238
-    """
-    looper = True
-    while looper:
-            time.sleep(1)
-            try:
-                connection.do_handshake()
-            except SSL.WantReadError:
-                pass
-            else:
-                # we know it is ok now
-                looper = False
-
-            if timeout_sec <= 0:
-                #or stop the loop after the timeout
-                looper = False
-
-            timeout_sec = timeout_sec -1
-
-def openssl_cert_to_ski(cert: crypto.X509):
-    x509_cert: x509.Certificate = cert.to_cryptography()
-    xx = x509_cert.public_bytes(encoding=Encoding.PEM)
-    #print(xx)
-    ski = x509_cert.extensions.get_extension_for_oid(x509.oid.ExtensionOID.SUBJECT_KEY_IDENTIFIER)
-    return ski.value.digest
-
-def ski_bytes_to_human_readable(ski: bytes):
-    return ski.hex(':').upper()
 
 def verify_cb(conn, cert, err, depth, ok):
     print(cert)
@@ -69,9 +27,6 @@ def verify_cb(conn, cert, err, depth, ok):
     print(f"ski:{ski}")
 
     return 1 # TODO: security: 1 means cert check ok!
-
-def ws_handler(connection):
-    print(connection)
 
 def ws_read_write_loop(ws: WSConnection, ssl_connection: SSL.Connection, conn_type: ''):
     while True:
