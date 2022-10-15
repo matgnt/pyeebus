@@ -15,7 +15,16 @@ import logging
 from cryptography import x509
 from cryptography.hazmat.primitives._serialization import Encoding
 import aioopenssl
-from uvicorn.protocols import websockets
+from wsproto import ConnectionType, WSConnection
+from wsproto.events import (
+    AcceptConnection,
+    CloseConnection,
+    Message,
+    Ping,
+    Request,
+    TextMessage,
+)
+
 
 from pyeebus import x509_utils
 
@@ -88,9 +97,38 @@ while True:
 def ssl_context_factory(xx):
     return ssl_context
 
+def handle_connection(transport: asyncio.Transport, reader_proto):
+    writer = asyncio.StreamWriter(transport=transport, protocol=reader_proto, reader=reader_proto.)
+
+    ws = WSConnection(ConnectionType.SERVER)
+
+    for event in ws.events():
+        if isinstance(event, Request):
+            print('Accepting connection request')
+            incoming_socket.send(ws.send(AcceptConnection()))
+
+def stream_reader_proto_factory(loop):
+    reader = asyncio.StreamReader(loop=loop)
+    proto = asyncio.StreamReaderProtocol(reader)
+    return proto
+
+loop = asyncio.get_event_loop()
+
 while True:
     incoming_sock, framaddr = sock.accept()
-    myasyncssl = aioopenssl.STARTTLSTransport(loop=asyncio.get_event_loop(), rawsock=incoming_sock, protocol=asyncio.Protocol(), ssl_context_factory=ssl_context_factory)
+    # our own SSL check
+    aiossl = aioopenssl.STARTTLSTransport(loop=asyncio.get_event_loop(), rawsock=incoming_sock, protocol=asyncio.Protocol(), ssl_context_factory=ssl_context_factory)
+    transport, reader_proto = aioopenssl.create_starttls_connection(
+        loop=loop,
+        protocol_factory=stream_reader_proto_factory,
+        use_starttls=False,
+        host=WEBSOCKET_HOST,
+        port=WEBSOCKET_PORT,
+    )
+    writer = asyncio.StreamWriter(transport=transport, protocol=reader_proto)
+    #incoming_ssl_conn = SSL.Connection(ssl_context, incoming_sock)
+    #incoming_ssl_conn.set_accept_state()
+    #incoming_ssl_conn.do_handshake()
 
-    ws = WSProtocol()
-    ws.connection_made(transport=myasyncssl)
+    handle_connection(transport, reader_proto)
+    

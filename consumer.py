@@ -11,6 +11,18 @@ import socket
 from OpenSSL import SSL
 import logging
 
+from wsproto import WSConnection
+from wsproto.connection import ConnectionType
+from wsproto.events import (
+    AcceptConnection,
+    CloseConnection,
+    Message,
+    Ping,
+    Pong,
+    Request,
+    TextMessage,
+)
+
 from pyeebus import x509_utils
 
 logging.basicConfig(
@@ -22,7 +34,9 @@ CONSUMER_PRIVATE_KEY_FN = os.getenv('CONSUMER_PRIVATE_KEY_FN', 'consumer.key')
 CONSUMER_PUBLIC_KEY_FN = os.getenv('CONSUMER_PUBLIC_KEY_FN', 'consumer.pem')
 CONSUMER_CERT_FN = os.getenv('CONSUMER_CERT_FN', 'consumer.crt')
 
-WEBSOCKET_URL = os.getenv('WEBSOCKET_URL', "wss://localhost:8765")
+#WEBSOCKET_URL = os.getenv('WEBSOCKET_URL', "wss://localhost:8765")
+WEBSOCKET_HOST = os.getenv('WEBSOCKET_HOST', 'localhost')
+WEBSOCKET_PORT = int(os.getenv('WEBSOCKET_PORt', '8765'))
 
 
 if not os.path.isfile(CONSUMER_PRIVATE_KEY_FN) and not os.path.isfile(CONSUMER_PUBLIC_KEY_FN) and not os.path.isfile(CONSUMER_CERT_FN):
@@ -50,11 +64,17 @@ ssl_context.use_privatekey_file(keyfile=CONSUMER_PRIVATE_KEY_FN)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 conn = SSL.Connection(ssl_context, sock)
-conn.connect(('localhost', 8765))
+conn.connect((WEBSOCKET_HOST, WEBSOCKET_PORT))
 conn.do_handshake()
-conn.send("""GET / HTTP/1.0""")
+
+"""
+conn.send('GET / HTTP/1.0')
 
 while True:
     msg = conn.recv(4096)
     print(msg)
+"""
 
+ws = WSConnection(ConnectionType.CLIENT)
+req = Request(host=WEBSOCKET_HOST, target="/")
+conn.send(req)
